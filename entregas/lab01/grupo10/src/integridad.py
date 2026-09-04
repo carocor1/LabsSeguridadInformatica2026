@@ -413,13 +413,15 @@ def calcular_mac(clave: bytes, mensaje: bytes, tag_esperado: str | None = None) 
     #         en tiempo constante.
     #         Borrá el `raise` de abajo y escribí tu código.
     # ----------------------------------------------------------------------
-    raise NotImplementedError(
-        "TODO 4 de 4 — calcular_mac() sin implementar.\n"
-        "  Qué falta: calcular el HMAC-SHA256 del mensaje con la clave y,\n"
-        "  si se pasó --verificar, comparar contra el tag esperado usando\n"
-        "  hmac.compare_digest().\n"
-        "  Leé el docstring de esta función: la comparación con == está prohibida."
-    )
+    hmac_obj = hmac.new(clave, mensaje, hashlib.sha256)
+    tag_calculado = hmac_obj.hexdigest()
+
+    if tag_esperado is None:
+        return tag_calculado, None
+
+    verificacion = hmac.compare_digest(tag_calculado, tag_esperado)
+
+    return tag_calculado, verificacion
 
 
 # ==========================================================================
