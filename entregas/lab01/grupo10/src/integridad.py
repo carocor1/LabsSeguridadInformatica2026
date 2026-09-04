@@ -258,12 +258,48 @@ def verificar_manifiesto(
     # TODO 2: implementar la clasificación en OK / MODIFICADO / FALTANTE / NUEVO.
     #         Borrá el `raise` de abajo y escribí tu código.
     # ----------------------------------------------------------------------
-    raise NotImplementedError(
-        "TODO 2 de 4 — verificar_manifiesto() sin implementar.\n"
-        "  Qué falta: comparar el directorio contra el manifiesto y devolver\n"
-        "  el diccionario con las cuatro categorías OK/MODIFICADO/FALTANTE/NUEVO.\n"
-        "  Leé el docstring de esta función: está la estructura exacta esperada."
-    )
+    base = directorio.resolve()
+    ruta_manifiesto_resuelta = ruta_manifiesto.resolve()
+
+    resultado = {
+        ESTADO_OK: [],
+        ESTADO_MODIFICADO: [],
+        ESTADO_FALTANTE: [],
+        ESTADO_NUEVO: [],
+    }
+
+    archivos_disco = {}
+
+    for ruta in base.rglob("*"):
+        if not ruta.is_file():
+            continue
+
+        if ruta.resolve() == ruta_manifiesto_resuelta:
+            continue
+
+        relativa = ruta.relative_to(base).as_posix()
+        archivos_disco[relativa] = ruta
+
+    rutas_disco = set(archivos_disco)
+    rutas_manifiesto = set(manifiesto)
+
+    rutas_en_ambos = rutas_disco & rutas_manifiesto
+    rutas_nuevas = rutas_disco - rutas_manifiesto
+    rutas_faltantes = rutas_manifiesto - rutas_disco
+
+    resultado[ESTADO_NUEVO] = sorted(rutas_nuevas)
+    resultado[ESTADO_FALTANTE] = sorted(rutas_faltantes)
+
+    for relativa in sorted(rutas_en_ambos):
+        ruta = archivos_disco[relativa]
+        digest_actual = sha256_archivo(ruta)
+
+        if digest_actual == manifiesto[relativa]:
+            resultado[ESTADO_OK].append(relativa)
+        else:
+            resultado[ESTADO_MODIFICADO].append(relativa)
+
+    return resultado
 
 
 # ==========================================================================
