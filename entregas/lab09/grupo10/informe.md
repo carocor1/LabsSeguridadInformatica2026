@@ -39,4 +39,3 @@ cat > entregas/lab09/grupo10/informe.md <<'EOF'
 ### Distribución del trabajo
 
 ### Fuentes consultadas
-EOF
