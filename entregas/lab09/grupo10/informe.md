@@ -1,4 +1,3 @@
-cat > entregas/lab09/grupo10/informe.md <<'EOF'
 # Informe — Laboratorio 09 · Agentes de pentest
 
 **Grupo:** 10 · **Integrantes:** Belén Rocío Ramello — @belramello · Carolina Paula Corazza — @carocor1 · Chiara Agustina Kordek — @chiarakordek · Juan Pablo Saby — @JuanSaby · **Fecha:**
