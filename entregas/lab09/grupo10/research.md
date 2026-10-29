@@ -1,6 +1,6 @@
 # Mini-research — Laboratorio 09
 
-**Tema elegido:** *(uno)*
+**Tema elegido:** 
 
 - [ ] **A.** Tool-use / function calling: cómo lo implementan Claude y OpenAI a
   nivel de API, y en qué se parecen y diferencian.
@@ -12,5 +12,5 @@
   automatizan (y qué no).
 
 ## Desarrollo
-## Fuentes (mín. 3, verificables)
-## Reflexión (3–5 líneas)
+## Fuentes 
+## Reflexión 
