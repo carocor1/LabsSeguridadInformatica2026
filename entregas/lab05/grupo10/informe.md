@@ -14,7 +14,7 @@
 
 ## 0. Declaración de uso de IA
 
-Se utilizó OpenCode para orientar la preparación del entorno, organizar las capturas de evidencia y revisar el formato del informe. La asistencia afectó la organización de la evidencia y la presentación del borrador; el mapa técnico y la interpretación de los resultados son responsabilidad del grupo y deben ser comprendidos y validados por sus integrantes. Los comandos de reconocimiento se ejecutaron contra el contenedor `phantomcorp` del laboratorio. Se verificaron las observaciones comparándolas con las salidas guardadas en `evidencia/`; las referencias de CVE/CVSS se contrastaron con NVD, CVE.org y la documentación de ProFTPD.
+Se utilizó OpenCode para orientar la preparación del entorno, organizar las capturas de evidencia y revisar el formato del informe. Los comandos de reconocimiento se ejecutaron contra el contenedor `phantomcorp`; las afirmaciones sobre el entorno se cotejaron con las salidas guardadas en `evidencia/`. El grupo debe comprender y validar el análisis antes de entregar. Las referencias de CVE/CVSS se contrastaron con NVD, CVE.org y la documentación de ProFTPD.
 
 ## 1. Parte práctica — flags capturadas
 
@@ -100,13 +100,14 @@ Las respuestas de servicios contienen strings identificadas como flags, pero el 
 **Pendiente — responsable: Belén.** Fundamentar con la salida de Nmap para 8080 y la respuesta real de `/status`; explicar el riesgo del servicio dev expuesto incluso sin atribuir un CVE no comprobado.
 
 **P3 — La ironía de `robots.txt`.**  
-**Pendiente — responsable: Chiara.** Explicar el propósito de `robots.txt` y, con la evidencia de `lab05-robots.txt` y `lab05-hidden-panel.txt`, por qué la ruta anunciada facilitó reconocimiento sin constituir control de acceso.
+`robots.txt` comunica a los rastreadores qué rutas se les solicita que no rastreen; no controla quién puede abrirlas. RFC 9309 aclara que sus reglas no son autorización de acceso y que publicar rutas allí puede hacerlas descubribles ([RFC 9309, sección 3](https://www.rfc-editor.org/rfc/rfc9309.html#section-3)). En este laboratorio, `lab05-robots.txt` muestra `Disallow: /panel-interno-9x2f` y hasta comenta que la ruta sigue accesible desde afuera. La petición posterior a esa ruta devolvió HTTP 200 y el contenido del panel (`lab05-hidden-panel.txt`). Por eso el archivo facilitó la enumeración, pero la evidencia de la respuesta muestra que no protegía el recurso.
 
 **P4 — Pasivo vs. activo.**  
-**Pendiente — responsable: Chiara.** Diferenciar reconocimiento pasivo y activo usando acciones que el grupo realmente ejecutó e indicar cuáles pudieron quedar registradas por `phantomcorp`.
+El reconocimiento pasivo reúne información disponible sin sondear directamente al objetivo; el activo lo consulta por tráfico de red. MITRE ATT&CK diferencia la búsqueda en sitios públicos ([T1593](https://attack.mitre.org/techniques/T1593/)) del escaneo que sondea infraestructura ([T1595](https://attack.mitre.org/techniques/T1595/)). En la bitácora del grupo no hay una acción pasiva documentada: `ping`, `nmap`, `ncat` y las solicitudes `curl` se dirigieron a `phantomcorp`, así que fueron activas. Las solicitudes HTTP pudieron aparecer en los registros de la aplicación; Nmap, Ncat y ping pudieron dejar rastros en registros o sensores de red. Como no se incluyeron esos registros, no afirmamos que cada acción haya quedado efectivamente registrada.
 
 **P5 — Ahora sos el defensor.**  
-**Pendiente — responsable: Chiara.** Elegir dos hallazgos observados y proponer medidas concretas aplicables a PhantomCorp, explicando cómo reducen la superficie; no limitarse a recomendaciones genéricas.
+1. **Panel interno publicado en el puerto 80:** exigir autenticación y autorización en la aplicación, y limitar el panel a la VPN o a una subred administrativa. Quitar la ruta de `robots.txt` elimina la pista, pero no reemplaza esos controles. Verificar desde una red externa que una solicitud sin credenciales reciba 401/403 y que el panel solo responda desde el acceso administrativo autorizado.
+2. **API de desarrollo expuesta en el puerto 8080:** retirar el servicio del perímetro público, enlazarlo solo a una interfaz de administración, restringir el acceso por firewall y desactivar el modo debug. Reducir los campos de `/status` para que no publique versión y estado de debug. Verificar desde fuera de la red administrativa que el puerto no sea alcanzable y que el endpoint ya no revele esos datos.
 
 ---
 
