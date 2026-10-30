@@ -29,7 +29,13 @@ _Pendiente de revisión y redacción por Belén._
 
 ## 4. Indicadores de compromiso (IOCs)
 
-_Pendiente de revisión y redacción por Chiara._
+| Tipo | Valor | Evidencia y límite |
+|---|---|---|
+| IP atacante | `185.220.101.42` | Aparece en el sondeo, enumeración y solicitudes del incidente (`labs/lab11-forensia/caso/logs/access.log:6-22`). Es el origen observado en esos registros; no atribuye identidad o actor. |
+| C2 saliente | `45.13.37.7:4444` | La captura de memoria muestra `nc` con proceso PID 1490 y conexión `ESTABLISHED` al puerto 4444 (`labs/lab11-forensia/caso/memoria/pslist.txt:9`; `labs/lab11-forensia/caso/memoria/netstat.txt:4`). Describe el estado en la captura del 05/09/2026 a las 02:30 UTC, no el estado actual del host. |
+| Webshell | `/var/www/uploads/shell.php` | El log registra el comando de descarga y luego una solicitud a la ruta (`labs/lab11-forensia/caso/logs/access.log:20-21`); el listado del disco ubica el archivo (`labs/lab11-forensia/caso/disco/listado.txt:4`) y la evidencia lo describe defangeado (`labs/lab11-forensia/caso/disco/var/www/uploads/shell.php.evidencia.txt:1-10`). No reconstruir ni ejecutar la muestra neutralizada. |
+| Usuario backdoor | `phantom-svc` | Figura como usuario agregado con UID/GID 0 (`labs/lab11-forensia/caso/disco/etc/passwd.snippet:3-4`). El caso no aporta evidencia de un inicio de sesión con esa cuenta ni de que haya sido utilizada. |
+| Persistencia por cron | `/etc/cron.d/phantom-maint` | El listado registra el archivo (`labs/lab11-forensia/caso/disco/listado.txt:6`) y el comentario de la webshell indica relanzamiento cada cinco minutos (`labs/lab11-forensia/caso/disco/var/www/uploads/shell.php.evidencia.txt:9`). El contenido del cron no está incluido, así que no se afirma su línea de ejecución exacta. |
 
 ## 5. Alcance del daño
 
@@ -44,6 +50,10 @@ _Pendiente de revisión y redacción por Juan._
 ### P2 — Integridad de la evidencia
 
 Comparé el SHA-256 de `logs/auth.log` con el valor registrado para ese archivo en `evidencia.sha256`. El hash calculado, `7d18039d128d0df7a245ca02f469ea02cd1d4f205a24fb33c5bcf7041b66e9ab`, no coincide con el valor del manifiesto (`0000decafbad0000f1e2d3c4b5a6978800112233445566778899aabbccddeeff`). Esa discrepancia indica que el archivo recibido no coincide con la versión cuya huella figura en la custodia. Por eso conservé el archivo sin modificarlo y documenté la diferencia. Si no se registra, no es posible confiar en su integridad ni distinguir con claridad qué contenido pertenece a la evidencia preservada. El hash detecta una diferencia, pero no identifica por sí solo quién la causó ni cuándo. La comprobación está documentada en `verificacion-custodia.txt`.
+
+### P3 — Correlación de artefactos
+
+La descarga de la webshell puede correlacionarse en tres artefactos dentro de una ventana cercana a las 02:19 del 05/09/2026. `labs/lab11-forensia/caso/logs/access.log:20` registra a las 02:19:02 UTC una solicitud que ejecuta `wget` desde `45.13.37.7` para guardar `s.php` como `/var/www/uploads/shell.php`. `labs/lab11-forensia/caso/disco/listado.txt:4` ubica ese archivo con hora 02:19, con precisión de minuto y sin zona horaria indicada. `labs/lab11-forensia/caso/memoria/bash_history.txt:4` conserva el mismo comando y destino, pero no asigna hora individual a los comandos. En conjunto respaldan el despliegue de la webshell alrededor de ese momento; las marcas no son idénticas y no permiten fijar un segundo exacto para la creación del archivo o la ejecución del comando.
 
 ### P4 — Recuperación del historial
 
