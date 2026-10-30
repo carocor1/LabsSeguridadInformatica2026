@@ -45,7 +45,7 @@ Esto demuestra que el servidor público hizo la petición a `127.0.0.1:9000` des
 
 ### R2 — Intranet en la red interna
 
-El nombre `phantomcorp-intra` estaba indicado por el escenario y seguía el patrón de nombres usado en el laboratorio. Se solicitó la raíz de ese host a través de la previsualización:
+El escenario del laboratorio proporcionó el nombre `phantomcorp-intra`. La consulta directa desde la consola atacante devolvió `curl: (6) Could not resolve host` (HTTP 000): eso demuestra un fallo de resolución en esa prueba, pero no permite concluir que hubiera un bloqueo de ruta. Se solicitó la raíz del host a través de la previsualización:
 
 ```bash
 curl -sS --max-time 5 "http://phantomcorp/preview?url=http%3A%2F%2Fphantomcorp-intra%2F"
@@ -62,7 +62,7 @@ La respuesta incluyó la página interna:
 </li>
 ```
 
-La consola atacante no pudo resolver directamente ese nombre, pero el servidor público pudo consultarlo desde su red interna y devolvió el contenido por `/preview`. Esta prueba demuestra el acceso indirecto a la página interna mediante SSRF; no demuestra por sí sola que la consola atacante tenga una ruta directa a esa red.
+El servidor público devolvió la página interna por `/preview`. Esto demuestra que la aplicación realizó la consulta desde su contexto de red y expuso su respuesta mediante SSRF; no demuestra que la consola atacante tuviera resolución DNS o una ruta directa a esa red.
 
 ### R3 — Lectura del backup de clientes
 
@@ -85,7 +85,7 @@ La respuesta relevante fue:
 }
 ```
 
-Esto demuestra la lectura, mediante SSRF, de un backup interno con dos registros de clientes y sus CUIT. No hay evidencia en esta prueba de uso posterior de los datos ni de su envío a un tercero.
+La respuesta devuelve, mediante SSRF, un backup interno con dos registros que incluyen `id`, empresa y CUIT, además de la flag en el campo `integridad`. Esto demuestra lectura del recurso dentro del laboratorio; no hay evidencia de uso posterior de esos datos ni de su envío a un tercero.
 
 ## 2. Evidencia de progreso
 
@@ -112,7 +112,7 @@ _Pendiente de redacción y revisión por Belén._
 
 ### P3 — Hallazgo profesional
 
-_Pendiente de revisión por Chiara._
+**Activo afectado:** la intranet `phantomcorp-intra`, en particular `/backups/clientes.json`. **Vector:** la función `/preview` del portal público acepta una URL y realiza la petición desde el servidor conectado a la red interna. **Impacto observado:** la respuesta de R3 expuso dos registros de clientes con identificadores, nombres de empresas y CUIT. **Evidencia:** en R2, `/preview` devolvió la portada interna y el enlace al backup; en R3, la misma función devolvió el JSON con los registros y el marcador `integridad`. La falla directa de DNS desde la consola atacante no contradice el hallazgo: las solicitudes las hizo el servidor. Esto confirma exposición de datos ficticios en el entorno de práctica, no su uso posterior, transferencia a un tercero ni acceso a una infraestructura cloud real.
 
 ### P4 — Mitigaciones
 
