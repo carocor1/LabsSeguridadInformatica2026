@@ -1,0 +1,131 @@
+# Laboratorio 04 
+Seguridad Informática · Unidad 1 · UTN Facultad Regional Villa María · 2026
+
+**Grupo:** 10
+
+| Integrante | Legajo | GitHub |
+|---|---:|---|
+| Belén Rocío Ramello | 15226 | [@belramello](https://github.com/belramello) |
+| Carolina Paula Corazza | 15239 | [@carocor1](https://github.com/carocor1) |
+| Chiara Agustina Kordek | 14719 | [@chiarakordek](https://github.com/chiarakordek) |
+| Juan Pablo Saby | 15026 | [@JuanSaby](https://github.com/JuanSaby) |
+
+## 0. Declaración de uso de IA
+
+Se consultó **opencode** para aclarar dudas y recibir apoyo puntual en la
+redacción y organización de algunos apartados del informe y la mini-research.
+El grupo ejecutó los comandos del enunciado, comparó los resultados obtenidos
+(ALE=20000.00, ROI=0.875 y el ranking de `priorizar`) y revisó el contenido.
+
+## 1. Parte A — Marco aplicado
+
+### A.1 — Marco elegido
+
+Para esta parte se eligio el **NIST Cybersecurity Framework (CSF)**. El principal
+motivo fue que PhantomCorp arrancó de bastante cero: sin MFA, sin política de
+contraseñas, sin plan de incidentes. Cuando una empresa está en ese punto, el
+problema no es conseguir una certificación, es poner orden, y las 5 funciones
+del CSF (Identify, Protect, Detect, Respond, Recover) nos permitieron encarar
+eso de manera directa. Además es un marco gratuito y de uso público, y al ser de
+*resultados* y no de pasos obligatorios, no obliga a una estructura pesada como
+la que pide un SGSI. Si más adelante PhantomCorp crece y le exigen certificarse,
+se puede migrar a ISO 27001 con todo este trabajo ya encaminado.
+
+### A.2 — Mapeo de debilidades a funciones/controles
+
+Se repaso el escenario y separamos los problemas que le vimos. Este fue el
+mapeo que quedó:
+
+| # | Debilidad del escenario | Función/control del marco |
+|---|---|---|
+| 1 | No hay MFA | Protect — control de acceso (PR.AC) |
+| 2 | No hay política de contraseñas | Protect — gestión de identidades y credenciales (PR.AC-1) |
+| 3 | No hay plan de respuesta a incidentes | Respond — gestión de incidentes (RS.RP) |
+| 4 | Backups en un solo disco de la oficina | Recover — backup y recuperación (RC.RP) |
+| 5 | Servidor web público con datos de tarjetas | Protect — seguridad de datos (PR.DS) |
+| 6 | Acceso remoto de empleados sin controles | Protect — control de acceso remoto (PR.AC) |
+
+La mayoría cayó en Protect, que es lo esperable: el problema de fondo de
+PhantomCorp es que no protege nada de lo que tiene.
+
+### A.3 — Respuesta al riesgo
+
+Acá se trato de no caer en "mitigar todo", porque no siempre es lo correcto ni
+lo más barato. Quedamos así:
+
+| # | Debilidad | Respuesta | Justificación |
+| 1 | No hay MFA | **Mitigar** | El MFA es barato y pega fuerte: corta la gran mayoría de los accesos con credenciales robadas. Para el costo que tiene, el riesgo que te evita no justifica dejarlo sin hacer. |
+| 2 | Sin política de contraseñas | **Mitigar** | Va en el mismo frente que el anterior: exigir contraseñas largas y rotación periódica es solo escribir una política y difundirla. Costo casi nulo y reduce contraseñas débiles comprometidas. |
+| 3 | Sin plan de respuesta a incidentes | **Mitigar** | Sin plan, un incidente chico se te escala mal: nadie sabe a quién avisar ni cómo contener. Un procedimiento documentado y probado con un simulacro es poco costo frente a las horas de caída que te ahorra. |
+| 4 | Backup en un solo disco | **Mitigar** | Un único disco en la oficina desaparece con un incendio, un robo o una falla. Con la regla 3-2-1 (una copia fuera del sitio) y probando que la restauración funciona, el riesgo de perder todo baja un montón. |
+| 5 | Web pública con datos de tarjetas | **Transferir** | Si se fuga un lote de tarjetas, la responsabilidad legal y el resarcimiento son billetes que una pyme no absorbe sola. Por eso lo transferimos con un seguro de ciberriesgo que cubra multas e indemnizaciones. |
+| 6 | Acceso remoto sin controles | **Aceptar** | Son 2 o 3 empleados remotos, con equipo corporativo y una VPN básica: el impacto de una comprometida es bajo. Lo dejamos como riesgo aceptado y documentado, revisado cada año. Si el teletrabajo crece, pasa a mitigar. |
+
+## 2. Parte B — Riesgo cuantitativo
+
+### B.1 — Ranking por ALE
+
+| # | Riesgo | ALE |
+|---|---|---|
+| 1 | Fuga de datos de tarjetas | $50 000 |
+| 2 | Acceso no autorizado por falta de MFA | $40 000 |
+| 3 | Interrupción del sitio web (ransomware/DDoS) | $40 000 |
+| 4 | Pérdida total del backup | $30 000 |
+| 5 | Credencial comprometida de empleado remoto | $9 000 |
+
+El puesto 1 nos confirmó lo que intuíamos: la fuga de tarjetas es lo más caro
+porque arrastra multas y problemas legales, no solo la pérdida directa. Donde la
+intuición no nos alcanzaba fue en el empate de $40 000 entre el acceso no
+autorizado y la interrupción: son riesgos de naturaleza distinta con el mismo
+peso. El acceso no autorizado es menos frecuente pero pega fuerte; la
+interrupción es más común pero cada evento duele menos. Si no lo hubiéramos
+medido, probablemente hubiéramos priorizado el más "ruidoso" y no el más caro.
+
+> **Nota sobre los números.** El escenario no trae valores, así que los
+> estimamos con criterio realista. *SLE* es lo que se pierde por evento, *ARO*
+> cuántas veces al año pasa, *ALE* = SLE × ARO. Para la fuga de tarjetas se
+> estimaron ~50.000 registros × $10 + multas y abogados → SLE $500.000, con
+> ARO 0,1 (1 vez cada 10 años). El acceso no autorizado (SLE $80.000, ARO 0,5)
+> asume un robo de credenciales cada 2 años; la interrupción (SLE $20.000,
+> ARO 2) asume 2 ataques por año de impacto moderado; la pérdida del backup
+> (SLE $150.000, ARO 0,2) un incendio/robo cada 5 años; y la credencial remota
+> (SLE $30.000, ARO 0,3) el caso más acotado. Son valores supuestos: el lab
+> evalúa el método aplicado y que sean creíbles, no un número exacto.
+
+### B.2 — ROI del control sobre el riesgo #1
+
+Para la fuga de tarjetas propusimos "cifrado de datos en tránsito y en reposo +
+WAF en el servidor web + tokenización del número de tarjeta" (no guardar el PAN
+aunque el sistema se caiga).
+
+- ALE antes: $50 000
+- ALE después (estimado): $10 000
+- Costo anual (licencias, auditoría, mantenimiento): $15 000
+- ROI = (50 000 − 10 000 − 15 000) / 15 000 = **1,67**
+
+El control se paga casi 1,7 veces por año, así que la decisión fue clara:
+**conviene hacerlo**.
+
+### B.3 — Un riesgo a aceptar o transferir (no mitigar)
+
+Se eligio la credencial comprometida de un empleado con acceso remoto (ALE
+$9 000). Con tan pocos empleados remotos, equipo corporativo y VPN, mitigarlo
+en serio (enclaves por usuario, monitoreo 24/7) costaría más plata que la
+pérdida que evita. Lo dejamos documentado como riesgo **aceptado** y con
+revisión anual: si el teletrabajo escala, el ALE sube y se revisa la decisión.
+
+Igual, la Parte A y la B se pueden combinar como doble opción: el riesgo de las
+tarjetas (A.3, #5) también se puede **transferir** con un seguro de ciberriesgo,
+pagando una prima fija para que la aseguradora absorba la pérdida puntual.
+
+## 3. Anexo — riesgos.json
+
+```json
+[
+  {"nombre": "Fuga de datos de tarjetas por servidor web público sin protección", "sle": 500000, "aro": 0.1},
+  {"nombre": "Acceso no autorizado por falta de MFA", "sle": 80000, "aro": 0.5},
+  {"nombre": "Interrupción del sitio web por ransomware o DDoS", "sle": 20000, "aro": 2.0},
+  {"nombre": "Pérdida total de datos por backup único en la oficina", "sle": 150000, "aro": 0.2},
+  {"nombre": "Credencial comprometida de un empleado con acceso remoto", "sle": 30000, "aro": 0.3}
+]
+```
